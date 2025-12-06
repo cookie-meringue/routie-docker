@@ -1,101 +1,102 @@
-name: Backend CD on develop branch
-
-on:
-  push:
-    branches: [ "develop" ]
-    paths:
-      - 'backend/**'
-  workflow_dispatch:
-
-jobs:
-  build-and-upload:
-    name: Build and Upload JAR
-    runs-on: ubuntu-latest
-
-    permissions:
-      actions: write
-      contents: read
-
-    defaults:
-      run:
-        working-directory: backend/spring-routie
-
-    steps:
-      - name: Checkout Repository
-        uses: actions/checkout@v4
-
-      - name: Set up JDK 21
-        uses: actions/setup-java@v4
-        with:
-          java-version: '21'
-          distribution: 'corretto'
-
-      - name: Gradle Caching
-        uses: actions/cache@v4
-        with:
-          path: |
-            ~/.gradle/caches
-            ~/.gradle/wrapper
-          key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties', '**/gradle.properties') }}
-          restore-keys: |
-            ${{ runner.os }}-gradle-
-
-      - name: Grant execute permission for gradlew
-        run: chmod +x gradlew
-
-      - name: Test with Gradle
-        run: ./gradlew test
-        env:
-          SPRING_PROFILES_ACTIVE: test
-
-      - name: BootJar with Gradle
-        run: ./gradlew bootJar
-
-      - name: Upload JAR Artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: spring-routie-jar
-          path: backend/spring-routie/build/libs/
-
-  download-and-deploy:
-    name: Deploy to EC2
-    runs-on: [ self-hosted, dev ]
-    needs: build-and-upload
-
-    defaults:
-      run:
-        working-directory: backend/spring-routie
-
-    steps:
-      - name: Checkout Repository
-        uses: actions/checkout@v4
-        with:
-          submodules: true
-          fetch-depth: 0
-          recursive: true
-          token: ${{ secrets.PAT_FOR_SUBMODULE }}
-
-      - name: Run Containers
-        run: sudo docker compose -f routie-backend-private/dev/docker-compose.yml up -d
-
-      - name: Download JAR Artifact
-        uses: actions/download-artifact@v4
-        with:
-          name: spring-routie-jar
-          path: /home/ubuntu/deployment/new
-
-      - name: Copy application.yml
-        run: cp routie-backend-private/dev/application.yml /home/ubuntu/deployment/new/application.yml
-
-      - name: Grant execute permission for gradlew
-        run: chmod +x gradlew
-
-      - name: Execute Flyway Migration
-        run: ./gradlew flywayMigrate
-        env:
-          MYSQL_URL: ${{ secrets.FLYWAY_URL_DEV }}
-          MYSQL_USERNAME: ${{ secrets.FLYWAY_USERNAME_DEV }}
-          MYSQL_PASSWORD: ${{ secrets.FLYWAY_PASSWORD_DEV }}
-
-      - name: Execute Deployment Script
-        run: sudo /home/ubuntu/commands/deploy/script.sh
+#name: Backend CD on develop branch
+#
+#on:
+#  push:
+#    branches: [ "develop" ]
+#    paths:
+#      - 'backend/**'
+#  workflow_dispatch:
+#
+#jobs:
+#  build-and-upload:
+#    name: Build and Upload JAR
+#    runs-on: ubuntu-latest
+#
+#    permissions:
+#      actions: write
+#      contents: read
+#
+#    defaults:
+#      run:
+#        working-directory: backend/spring-routie
+#
+#    steps:
+#      - name: Checkout Repository
+#        uses: actions/checkout@v4
+#
+#      - name: Set up JDK 21
+#        uses: actions/setup-java@v4
+#        with:
+#          java-version: '21'
+#          distribution: 'corretto'
+#
+#      - name: Gradle Caching
+#        uses: actions/cache@v4
+#        with:
+#          path: |
+#            ~/.gradle/caches
+#            ~/.gradle/wrapper
+#          key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties', '**/gradle.properties') }}
+#          restore-keys: |
+#            ${{ runner.os }}-gradle-
+#
+#      - name: Grant execute permission for gradlew
+#        run: chmod +x gradlew
+#
+#      - name: Test with Gradle
+#        run: ./gradlew test
+#        env:
+#          SPRING_PROFILES_ACTIVE: test
+#
+#      - name: BootJar with Gradle
+#        run: ./gradlew bootJar
+#
+#      - name: Upload JAR Artifact
+#        uses: actions/upload-artifact@v4
+#        with:
+#          name: spring-routie-jar
+#          path: backend/spring-routie/build/libs/
+#
+#  download-and-deploy:
+#    name: Deploy to EC2
+#    runs-on: [ self-hosted, dev ]
+#    needs: build-and-upload
+#
+#    defaults:
+#      run:
+#        working-directory: backend/spring-routie
+#
+#    steps:
+#      - name: Checkout Repository
+#        uses: actions/checkout@v4
+#        with:
+#          submodules: true
+#          fetch-depth: 0
+#          recursive: true
+#          token: ${{ secrets.PAT_FOR_SUBMODULE }}
+#
+#      - name: Run Containers
+#        run: sudo docker compose -f routie-backend-private/dev/docker-compose.yml up -d
+#
+#      - name: Download JAR Artifact
+#        uses: actions/download-artifact@v4
+#        with:
+#          name: spring-routie-jar
+#          path: /home/ubuntu/deployment/new
+#
+#      - name: Copy application.yml
+#        run: cp routie-backend-private/dev/application.yml /home/ubuntu/deployment/new/application.yml
+#
+#      - name: Grant execute permission for gradlew
+#        run: chmod +x gradlew
+#
+#      - name: Execute Flyway Migration
+#        run: ./gradlew flywayMigrate
+#        env:
+#          MYSQL_URL: ${{ secrets.FLYWAY_URL_DEV }}
+#          MYSQL_USERNAME: ${{ secrets.FLYWAY_USERNAME_DEV }}
+#          MYSQL_PASSWORD: ${{ secrets.FLYWAY_PASSWORD_DEV }}
+#
+#      - name: Execute Deployment Script
+#        run: sudo /home/ubuntu/commands/deploy/script.sh
+#
