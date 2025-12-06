@@ -1,3 +1,6 @@
 [submodule "backend/spring-routie/routie-backend-private"]
 	path = backend/spring-routie/routie-backend-private
 	url = https://github.com/routie-project/routie-backend-private.git
+[submodule "backend/spring-routie/routie-docker-submodule"]
+	path = backend/spring-routie/routie-docker-submodule
+	url = https://github.com/cookie-meringue/routie-docker-submodule.git
