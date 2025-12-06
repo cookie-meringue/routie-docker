@@ -79,7 +79,7 @@ jobs:
           cp -r src/main/resources/db/migration/* $DEPLOY_DIR/migration/
           
           pwd
-          cp -r ./routie-docker-private/dev/. $DEPLOY_DIR/
+          cp -r $GITHUB_WORKSPACE/routie-docker-private/dev/. $DEPLOY_DIR/
           
           sed -i "s/\${TAG}/${{ github.sha }}/g" $DEPLOY_DIR/docker-compose.yml
           
