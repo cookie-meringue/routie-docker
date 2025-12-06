@@ -93,7 +93,8 @@ jobs:
           
           sed -i "s/\${TAG}/${{ github.sha }}/g" $DEPLOY_DIR/docker-compose.yml
           
-          zip -r $DEPLOY_DIR/deploy.zip .
+          cd "$DEPLOY_DIR"
+          zip -r "$GITHUB_WORKSPACE/deploy.zip" .
 
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v4
@@ -104,8 +105,7 @@ jobs:
 
       - name: Upload Config to S3
         run: |
-          DEPLOY_DIR=$GITHUB_WORKSPACE/deployment
-          aws s3 cp $DEPLOY_DIR/deploy.zip s3://routie-docker-test/deployments/${{ github.sha }}/deploy.zip
+          aws s3 cp $GITHUB_WORKSPACE/deploy.zip s3://routie-docker-test/deployments/${{ github.sha }}/deploy.zip
 
 #  deploy-to-ec2:
 #    name: Deploy to EC2
