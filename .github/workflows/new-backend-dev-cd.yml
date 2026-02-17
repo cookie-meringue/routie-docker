@@ -114,3 +114,12 @@ jobs:
       - name: Upload Config to S3
         run: |
           aws s3 cp $GITHUB_WORKSPACE/deploy.zip s3://routie-docker-test/deployments/${{ github.sha }}/deploy.zip
+
+  deploy-to-ec2:
+    name: 3. Deploy to EC2
+    runs-on: [ self-hosted, dev ]
+    needs: upload-s3
+
+    steps:
+      - name: Execute Deployment Script
+        run: /home/ubuntu/deployment/deployment.sh ${{ github.sha }}
